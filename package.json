@@ -1,0 +1,14 @@
+{
+  "name": "auto_chat_game_tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "quangpao",
+  "license": "ISC",
+  "dependencies": {
+    "yaml": "^2.4.1"
+  }
+}
