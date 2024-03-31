@@ -1,6 +1,7 @@
 const fs = require('fs');
 const rl = require('readline');
 const path = require('path');
+let lastDetectedGame = [0, ''];
 
 module.exports = function readFile() {
 
@@ -44,13 +45,15 @@ module.exports = function readFile() {
   });
 
   reader.on('close', () => {
-    console.log('Last chat game:', lastChatGame);
     const currentTime = new Date().getTime() / 1000;
-    console.log('Current time:', currentTime, 'Diff:', currentTime - lastChatGame[0]);
     if (currentTime - lastChatGame[0] > 30) {
       return;
     }
-
+    if (lastDetectedGame[1] === lastChatGame[1]) {
+      return;
+    }
+    lastDetectedGame = lastChatGame;
+    console.log("Detected game: ", lastChatGame[1])
     const { exec } = require('child_process');
     exec(`echo ${lastChatGame[1]} | clip`, (err, stdout, stderr) => {
       if (err) {

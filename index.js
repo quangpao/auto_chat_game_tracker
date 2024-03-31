@@ -5,8 +5,11 @@ const file = fs.readFileSync('config.yml', 'utf8');
 
 
 const config = YAML.parse(file);
-
-console.log(config);
+if (!config) {
+  console.log("Error parsing config.yml");
+  process.exit(1);
+}
+console.log("Config loaded: ", config);
 
 setInterval(() => {
 readFile();
