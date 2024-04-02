@@ -20,5 +20,5 @@ if (!config) {
 console.log("Config loaded: ", config);
 
 setInterval(() => {
-readFile();
+readFile(config.INTERVAL);
 }, config.INTERVAL);
