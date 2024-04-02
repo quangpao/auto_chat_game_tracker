@@ -1,7 +1,6 @@
 const fs = require('fs');
 const rl = require('readline');
 const path = require('path');
-const math = require('mathjs');
 const { exec } = require('child_process');
 
 let lastDetectedGame = [0, '', '', 0];
@@ -48,7 +47,7 @@ module.exports = function readFile(interval) {
           switch (lastTypeGame) {
             case 1:
               result = line.split('Solve the following: ')[1].replace('\r', '');
-              lastChatGame = [timestamp, math.evaluate(result), time];
+              lastChatGame = [timestamp, eval(result), time];
               break;
             case 2:
               result = line.split('First to type the word: ')[1].replace('\r', '');
