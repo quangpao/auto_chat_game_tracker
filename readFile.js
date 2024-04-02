@@ -1,66 +1,81 @@
 const fs = require('fs');
 const rl = require('readline');
 const path = require('path');
-let lastDetectedGame = [0, ''];
+const { exec } = require('child_process');
 
-module.exports = function readFile() {
+let lastDetectedGame = [0, '', '', 0];
+let gameTypes = {
+  'First to type the word': 2,
+  'Solve the following': 1
+}
 
-  const appData = process.env.APPDATA;
-  const filePath = path.join(appData, '.minecraft', 'logs', 'latest.log');
-  // Make stream read file line by line
-  const reader = rl.createInterface({
-    input: fs.createReadStream(filePath, { encoding: 'utf8' })
-  });
-  let lastChatGame = [0, '']; //[timestamp, chatGame]
-  let lastTypeGame = 1; // 1 = guessNumber, 2 = typeString
-  let isGame = false;
-  reader.on('line', (line) => {
-    isGame = false;
-    if (line.includes('First to type the word')) {
-      lastTypeGame = 2;
-      isGame = true;
-    } else if (line.includes('Solve the following')) {
-      lastTypeGame = 1;
-      isGame = true;
+module.exports = function readFile(interval) {
+  try {
+    // Check lastDetectedGame timestamp if it's time to check for new games
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (lastDetectedGame[3] - interval > currentTime) {
+      return;
     }
-    if (isGame) {
-      const date = new Date().toISOString().split('T')[0];
-      const timeLine = `${date} ` + line.split(' ')[0].split('[')[1].split(']')[0];
-      const timestamp = new Date(timeLine).getTime() / 1000;
-      if (timestamp > lastChatGame[0]) {
-        let result = '';
-        switch (lastTypeGame) {
-          case 1:
-            result = line.split('Solve the following: ')[1].replace('\r', '');
-            lastChatGame = [timestamp, eval(result)];
-            break;
-          case 2:
-            result = line.split('First to type the word: ')[1].replace('\r', '');
-            lastChatGame = [timestamp, result];
-            break;
 
+
+    const appData = process.env.APPDATA;
+    const filePath = path.join(appData, '.minecraft', 'logs', 'latest.log');
+    
+    // Make stream read file line by line
+    const reader = rl.createInterface({
+      input: fs.createReadStream(filePath, { encoding: 'utf8' })
+    });
+
+    let lastChatGame = [0, '', '']; //[timestamp, chatGame, time]
+    let lastTypeGame = 1; // 1 = guessNumber, 2 = typeString
+    let isGame = false;
+
+    reader.on('line', (line) => {
+      isGame = false;
+      const gameType = Object.keys(gameTypes).find(type => line.includes(type));
+      if (gameType) {
+        lastTypeGame = gameTypes[gameType];
+        isGame = true;
+      }
+
+      if (isGame) {
+        const date = new Date().toISOString().split('T')[0];
+        const [_,time] = line.split(' ')[0].match(/\[(.*?)\]/);
+        const timestamp = Date.parse(`${date} ${time}`) / 1000;
+        if (timestamp > lastChatGame[0]) {
+          let result = '';
+          switch (lastTypeGame) {
+            case 1:
+              result = line.split('Solve the following: ')[1].replace('\r', '');
+              lastChatGame = [timestamp, eval(result), time];
+              break;
+            case 2:
+              result = line.split('First to type the word: ')[1].replace('\r', '');
+              lastChatGame = [timestamp, result, time];
+              break;
+          }
         }
       }
-    }
-  });
+    });
 
-  reader.on('close', () => {
-    const currentTime = new Date().getTime() / 1000;
-    if (currentTime - lastChatGame[0] > 30) {
-      return;
-    }
-    if (lastDetectedGame[1] === lastChatGame[1]) {
-      return;
-    }
-    lastDetectedGame = lastChatGame;
-    console.log("Detected game: ", lastChatGame[1])
-    const { exec } = require('child_process');
-    exec(`echo ${lastChatGame[1]} | clip`, (err, stdout, stderr) => {
-      if (err) {
-        console.error(err);
+    reader.on('close', () => {
+      if (lastDetectedGame[1] === lastChatGame[1]) {
         return;
       }
-    });
-  });
+      lastDetectedGame = lastChatGame;
+      const nextGame = lastDetectedGame[0] + (lastTypeGame === 1 ? 1200 : 600);
+      lastDetectedGame[3] = nextGame;
+      console.log(`[${lastDetectedGame[2]}] Detected game: ${lastDetectedGame[1]}`)
+      console.log(`Next game will be at ${new Date((nextGame) * 1000).toLocaleTimeString()}`)
 
+      exec(`echo ${lastDetectedGame[1]} | clip`, (err, stdout, stderr) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+      });
+    });
+  } catch (error) {
+    console.log('Error detected: ', error);
+  }
 }
