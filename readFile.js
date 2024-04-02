@@ -34,7 +34,7 @@ module.exports = function readFile() {
 
       if (isGame) {
         const date = new Date().toISOString().split('T')[0];
-        const [time] = line.split(' ')[0].match(/\[(.*?)\]/) || [];
+        const [_,time] = line.split(' ')[0].match(/\[(.*?)\]/);
         const timestamp = Date.parse(`${date} ${time}`) / 1000;
         if (timestamp > lastChatGame[0]) {
           let result = '';
@@ -53,13 +53,14 @@ module.exports = function readFile() {
     });
 
     reader.on('close', () => {
-      const currentTime = Date.now() / 1000;
+      const currentTime = lastDetectedGame[0] || lastChatGame[0];
+      const nextGame = currentTime + (lastTypeGame === 1 ? 1200 : 600);
       if (lastDetectedGame[1] === lastChatGame[1]) {
         return;
       }
       lastDetectedGame = lastChatGame;
       console.log(`[${lastChatGame[2]}] Detected game: ${lastChatGame[1]}`)
-      console.log(`Next game will be at ${new Date((currentTime + 600) * 1000).toISOString().split('T')[1].split('.')[0]}`)
+      console.log(`Next game will be at ${new Date((nextGame) * 1000).toLocaleTimeString()}`)
 
       exec(`echo ${lastChatGame[1]} | clip`, (err, stdout, stderr) => {
         if (err) {
