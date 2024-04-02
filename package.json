@@ -1,6 +1,6 @@
 {
   "name": "auto_chat_game_tracker",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,9 @@
   "author": "quangpao",
   "license": "ISC",
   "dependencies": {
-    "pkg": "^5.8.1",
     "yaml": "^2.4.1"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   }
 }
