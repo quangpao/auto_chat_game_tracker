@@ -4,11 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pkg": "pkg index.js --target node20-win-x64 --output ./dist/ChatGameTracker.exe"
   },
   "author": "quangpao",
   "license": "ISC",
   "dependencies": {
+    "mathjs": "^12.4.1",
+    "pkg": "^5.8.1",
     "yaml": "^2.4.1"
   }
 }
